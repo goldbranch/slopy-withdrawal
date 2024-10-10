@@ -28,6 +28,10 @@ contract SlopyWithdrawalContract {
     // Событие успешного вывода средств
     event WithdrawalSuccess(uint256 indexed uniqId, address indexed recipient);
 
+    // Событие смены публичного ключа
+    event PublicKeyUpdated(address indexed oldPublicKey, address indexed newPublicKey);
+
+
     constructor(address _slopyToken, address _publicKey) {
         owner = msg.sender;
         slopyToken = _slopyToken;
@@ -86,6 +90,14 @@ contract SlopyWithdrawalContract {
 
         // Переводим все Slopy владельцу контракта
         IERC20(slopyToken).transfer(owner, contractBalance);
+    }
+
+    // Функция для смены публичного ключа
+    function updatePublicKey(address newPublicKey) public onlyOwner {
+        require(newPublicKey != address(0), "New public key cannot be the zero address");
+        address oldPublicKey = publicKey;
+        publicKey = newPublicKey;
+        emit PublicKeyUpdated(oldPublicKey, newPublicKey);
     }
 
     // Функция для проверки подписи
