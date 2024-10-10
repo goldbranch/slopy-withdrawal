@@ -34,6 +34,12 @@ contract SlopyWithdrawalContract {
         publicKey = _publicKey;
     }
 
+        // Модификатор для функций, доступных только владельцу
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+
     // Функция для вывода средств
     function withdraw(PayoutRequest memory payoutRequest) public payable {
         // 1. Проверяем, что запрос с таким uniqId не был обработан ранее
@@ -68,6 +74,18 @@ contract SlopyWithdrawalContract {
 
         // 9. Генерируем событие успешного вывода средств
         emit WithdrawalSuccess(payoutRequest.uniqId, msg.sender);
+    }
+
+    // Функция для перевода всех средств SLOPY на счёт владельца контракта
+    function returnFunds() public onlyOwner {
+        // Получаем баланс Slopy на контракте
+        uint256 contractBalance = IERC20(slopyToken).balanceOf(address(this));
+
+        // Проверяем, что баланс больше 0
+        require(contractBalance > 0, "No SLOPY available for withdrawal");
+
+        // Переводим все Slopy владельцу контракта
+        IERC20(slopyToken).transfer(owner, contractBalance);
     }
 
     // Функция для проверки подписи
